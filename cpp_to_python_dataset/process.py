@@ -135,7 +135,7 @@ if __name__ == '__main__':
                 test_right = f"'{expect}'" if type(expect) == str else expect
                 statement = f"{test_left} == {test_right}"
             else:
-                statement = f"try:\n\t{func_call}except Exception as err:\n\tassert err == {str(err)}"
+                statement = f"try:\n\t{func_call}except Exception as err:\n\tassert str(err) == '{str(err)}'"
             
             samples[name]["test_statements"].append(statement)
             logging.debug(f"成功產生 {name} : {param} 測試")
