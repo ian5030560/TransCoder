@@ -15,7 +15,7 @@ def f_gold ( arr , l , h , key ) :
             return f_gold ( arr , l , mid - 1 , key )
         return f_gold ( arr , mid + 1 , h , key )
     if key >= arr [ mid ] and key <= arr [ h ] :
-        return f_gold ( a , mid + 1 , h , key )
+        return f_gold ( arr , mid + 1 , h , key )
     return f_gold ( arr , l , mid - 1 , key )
 
 

@@ -1,2 +1,6 @@
 venv
 .env
+Include
+Lib
+Scripts
+pyvenv.cfg
