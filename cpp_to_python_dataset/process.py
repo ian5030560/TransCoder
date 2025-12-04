@@ -6,30 +6,32 @@ import tree_sitter_python
 import tree_sitter_cpp
 import json
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 def list_dataset_files(dataset: str, suffix: str) -> list[str]:
     if not os.path.exists(dataset):
         raise FileNotFoundError(f"The dataset path '{dataset}' does not exist.")
-    logging.info(f"列出 {dataset} 的 {suffix} 文件")
+    logger.info(f"列出 {dataset} 的 {suffix} 文件")
     return [f for f in os.listdir(dataset) if os.path.isfile(os.path.join(dataset, f)) and f.endswith(suffix)]
 
 def extract_base_filenames(file_list: list[str]) -> set[str]:
     return {os.path.splitext(f)[0] for f in file_list}
 
 def read_file(file_path: str) -> str:
-    logging.info(f"讀取 {file_path}")
+    logger.info(f"讀取 {file_path}")
     with open(file_path, 'r', encoding='utf-8') as file:
         return file.read()
 
 def query(content: str, language: Language, query_string: str) -> dict[str, list[str]]:
-    logging.info("解析文件內容")
+    logger.info("解析文件內容")
     parser = Parser(language)
     tree = parser.parse(bytes(content, "utf8"))
     
-    logging.info("開始查詢")
+    logger.info("開始查詢")
     captured = QueryCursor(Query(language, query_string)).captures(tree.root_node)
-    logging.info("查詢完成")
+    logger.info("查詢完成")
     
     for key in captured.keys():
         captured[key] = list(map(lambda node: str(node.text, "utf-8"), captured[key]))
@@ -45,7 +47,7 @@ def assert_have_keys(arg: dict, expected: list[str]):
 class Sample(typing.TypedDict):
     cpp: str
     python: str
-    test_statements: list[str]
+    test: list[str]
 
 if __name__ == '__main__':
     ROOT_DIR = os.path.join("data", "evaluation", "geeks_for_geeks_successful_test_scripts")
@@ -59,7 +61,7 @@ if __name__ == '__main__':
     
     names = [name for name in cpp_list_names if name in python_list_names]
 
-    samples: dict[str, Sample] = {name: {"cpp": "", "python": "", "test_statements": []} for name in names}
+    samples: dict[str, Sample] = {name: {"cpp": "", "python": "", "test": []} for name in names}
     
     # 在 cpp 檔案中擷取函式內容
     CPP_LANGUAGE = Language(tree_sitter_cpp.language())
@@ -122,7 +124,7 @@ if __name__ == '__main__':
         for param in eval(python_queried["var_value"][0]):
             exec(samples[name]["python"])
             func_call = f"{func_name}{param}"
-            logging.info(f"呼叫 {func_call}")
+            logger.info(f"呼叫 {func_call}")
             
             err = None
             try:
@@ -137,9 +139,9 @@ if __name__ == '__main__':
             else:
                 statement = f"try:\n\t{func_call}except Exception as err:\n\tassert str(err) == '{str(err)}'"
             
-            samples[name]["test_statements"].append(statement)
-            logging.debug(f"成功產生 {name} : {param} 測試")
-        logging.info(f"成功取得全部測試句子")
+            samples[name]["test"].append(statement)
+            logger.debug(f"成功產生 {name} : {param} 測試")
+        logger.info(f"成功取得全部測試句子")
         
     # 將 cpp 函式、python 函式和測試句子整合到 samples.json 中
     with open("samples.json", "w") as sample_file:
